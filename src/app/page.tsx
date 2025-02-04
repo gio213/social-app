@@ -1,5 +1,18 @@
+import CreatePost from "@/components/CreatePost";
+import FollowToFollow from "@/components/FollowToFollow";
+import RecomendedUsers from "@/components/RecomendedUsers";
 import { prisma } from "@/lib/prisma";
+import { currentUser } from "@clerk/nextjs/server";
 
-export default function Home() {
-  return <main>home page</main>;
+export default async function Home() {
+  const user = await currentUser();
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+      <div className="lg:col-span-6">{user ? <CreatePost /> : null}</div>
+      <div className="lg:block  hidden lg:col-span-4 sticky top-20">
+        <FollowToFollow />
+        <RecomendedUsers />
+      </div>
+    </div>
+  );
 }
