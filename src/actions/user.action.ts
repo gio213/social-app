@@ -58,11 +58,11 @@ export const getUserByClerkId = async (clerkId: string) => {
 
 export const getDbUserId = async () => {
   const { userId: clerkId } = await auth();
-  if (!clerkId) throw new Error("User not authenticated");
+  if (!clerkId) return null;
 
   const user = await getUserByClerkId(clerkId);
 
-  if (!user) throw new Error("User not found");
+  if (!user) return null;
 
   return user.id;
 };
@@ -70,6 +70,8 @@ export const getDbUserId = async () => {
 export const getRandomUsers = async () => {
   try {
     const userId = await getDbUserId();
+
+    if (!userId) return [];
 
     const randomUser = await prisma.user.findMany({
       where: {
@@ -101,37 +103,39 @@ export const getRandomUsers = async () => {
   }
 };
 
-export const getRecomendedUsers = async () => {
+export const getRecommendedUsers = async () => {
   try {
     const userId = await getDbUserId();
+    if (!userId) return [];
 
-    // Step 1: Find users followed by the current user
-    const followingUsers = await prisma.follows.findMany({
-      where: { followerdId: userId }, // ვისაც current user მიჰყვება
+    // Step 1: Find users that current user follows (A users)
+    const followedByCurrentUser = await prisma.follows.findMany({
+      where: { followerdId: userId },
       select: { followingId: true },
     });
+    const aUserIds = followedByCurrentUser.map((f) => f.followingId);
 
-    const followingIds = followingUsers.map((f) => f.followingId);
-
-    // Step 2: Find users that are followed by the users found in step 1
-    const suggestedUsers = await prisma.follows.findMany({
+    // Step 2: Find users that A users follow (B, C, D users)
+    const recommendedUsers = await prisma.user.findMany({
       where: {
-        followerdId: { in: followingIds }, // A-ს მიერ ფოლოურებული მომხმარებლები
-        followingId: { not: userId }, // არ უნდა დავაბრუნოთ current user
-      },
-      select: { followingId: true },
-    });
-
-    const suggestedUserIds = suggestedUsers.map((f) => f.followingId);
-
-    // Step 3: Fetch the actual user data
-    const currentUserMaybeKnows = await prisma.user.findMany({
-      where: {
-        id: { in: suggestedUserIds },
+        // Users who are followed by A users
+        followers: {
+          some: {
+            followerdId: {
+              in: aUserIds,
+            },
+          },
+        },
+        // Exclude current user and users they already follow
+        AND: {
+          id: {
+            notIn: [...aUserIds, userId],
+          },
+        },
       },
       take: 6,
       orderBy: {
-        id: "desc",
+        createdAt: "desc",
       },
       select: {
         id: true,
@@ -147,9 +151,9 @@ export const getRecomendedUsers = async () => {
       },
     });
 
-    return currentUserMaybeKnows;
+    return recommendedUsers;
   } catch (error) {
-    console.error(error);
+    console.error("Error getting recommended users:", error);
     return [];
   }
 };
@@ -157,6 +161,7 @@ export const getRecomendedUsers = async () => {
 export const toggleFollow = async (targetUserId: string) => {
   try {
     const userId = await getDbUserId();
+    if (!userId) return;
     if (userId === targetUserId) throw new Error("You can't follow yourself");
 
     // ვპოულობთ targetUser-ის სახელს
@@ -166,7 +171,7 @@ export const toggleFollow = async (targetUserId: string) => {
     });
 
     if (!user) {
-      return { success: false, error: "User not found" };
+      return;
     }
 
     // ვამოწმებთ, უკვე მიჰყვება თუ არა მომხმარებელი

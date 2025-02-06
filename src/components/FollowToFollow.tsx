@@ -7,7 +7,6 @@ import Link from "next/link";
 
 const FollowToFollow = async () => {
   const randomUser = await getRandomUsers();
-  console.log("randomUser", randomUser);
   if (randomUser.length === 0) return null;
   return (
     <Card>

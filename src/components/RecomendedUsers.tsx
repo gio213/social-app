@@ -1,12 +1,12 @@
-import { getRecomendedUsers } from "@/actions/user.action";
+import { getRecommendedUsers } from "@/actions/user.action";
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Link } from "lucide-react";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import FollowButton from "./FollowButton";
+import Link from "next/link";
 
 const RecomendedUsers = async () => {
-  const recomendedUsers = await getRecomendedUsers();
+  const recomendedUsers = await getRecommendedUsers();
   console.log("recomendedUsers", recomendedUsers);
   if (recomendedUsers.length === 0) return null;
   return (
