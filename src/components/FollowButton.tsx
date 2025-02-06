@@ -16,7 +16,7 @@ const FollowButton = ({ userId }: FollowButtonProps) => {
     setIsLoading(true);
     try {
       const result = await toggleFollow(userId);
-      if (result.success) {
+      if (result?.success) {
         toast.success("Success", {
           description: result.message,
           closeButton: true,
