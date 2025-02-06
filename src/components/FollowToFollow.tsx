@@ -1,4 +1,4 @@
-import { getRandomUsers, getRecomendedUsers } from "@/actions/user.action";
+import { getRandomUsers } from "@/actions/user.action";
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarImage } from "./ui/avatar";
